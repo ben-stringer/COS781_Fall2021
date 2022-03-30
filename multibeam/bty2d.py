@@ -34,8 +34,8 @@ class Bty2D:
         return Bty2D(interp, xs, zs)
 
     @staticmethod
-    def gen_random(initial_depth=2000, num_pts=100):
-        rand_nums = np.random.default_rng().standard_normal(num_pts) * 20 + 12
+    def gen_random(initial_depth=2600, num_pts=100):
+        rand_nums = np.random.default_rng().standard_normal(num_pts) * 5 + 3
         x = []
         z = []
         depth = initial_depth

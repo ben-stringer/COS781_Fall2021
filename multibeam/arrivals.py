@@ -14,11 +14,17 @@ logger.setLevel(logging.DEBUG)
 
 
 def _generate_amplitude_sequence(cycles_per_ping, samples_per_ping):
-    return np.sin(
-            np.linspace(
-                0,
-                cycles_per_ping * 2 * math.pi,
-                samples_per_ping))
+    signal_sin = np.sin(
+        np.linspace(
+            0,
+            cycles_per_ping * 2 * math.pi,
+            samples_per_ping))
+    signal_norm = np.exp(
+        -np.square(
+            np.linspace(0, samples_per_ping - 1, samples_per_ping) - (samples_per_ping/2))
+        / (samples_per_ping/4)**2
+    )
+    return signal_sin * signal_norm
 
 
 class Arrivals(object):
@@ -157,6 +163,8 @@ def plot_timeseries_and_sum(receivers, summed_arrivals):
 
 
 def plot_receiver_timeseries(receivers, **kwargs):
+    plt.xlabel("Time")
+    plt.ylabel("Amplitude")
     for receiver in receivers:
         plt.plot(receiver['time'], receiver['amplitude'], **kwargs)
 

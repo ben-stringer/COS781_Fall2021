@@ -46,7 +46,7 @@ class Bty3D:
         :return:
         """
         avg_depth = 2600
-        depth_spread = 2000
+        depth_spread = 9000
         num = 1000
 
         F = 3
