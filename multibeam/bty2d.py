@@ -47,6 +47,13 @@ class Bty2D:
             z.append(depth)
         return Bty2D('L', x, z)
 
+    @staticmethod
+    def gen_flat(depth=2000, num_pts=100):
+        return Bty2D(
+            'L',
+            [i for i in range(num_pts)],
+            [depth for _ in range(num_pts)])
+
     def __init__(self, interp, x, z):
         self.interp = interp
         self.length = len(x)
@@ -122,10 +129,10 @@ def main():
 
 
 def main_gen():
-    bty = Bty2D.gen_random()
-    bty.to_file("bathymetry2d.bty")
+    bty = Bty2D.gen_flat()
+    bty.to_file("bathymetry2d_flat.bty")
 
 
 if __name__ == "__main__":
     main_gen()
-    main()
+    #main()
