@@ -32,7 +32,8 @@ class Arrivals(object):
     def __init__(self, bty, src_pos, receiver_positions,
                  sound_speed_meters_per_sec=1500,
                  ping_duration_sec=0.001,
-                 freq_hz=8_000):
+                 freq_hz=8_000,
+                 sample_rate_hz=300_000_000):
         self.bathymetry_points = bty
         self.src_pos = src_pos
         self.receivers = [
@@ -47,8 +48,8 @@ class Arrivals(object):
         self.sound_speed_meters_per_sec = sound_speed_meters_per_sec
         self.ping_duration_sec = ping_duration_sec
         self.freq_hz = freq_hz
+        self.sample_rate_hz = sample_rate_hz
 
-        self.sample_rate_hz = freq_hz * 100
         self.sound_speed_samples_per_meter = (
                 self.sample_rate_hz / sound_speed_meters_per_sec)
         self.samples_per_ping = int(ping_duration_sec * self.sample_rate_hz)
@@ -72,7 +73,7 @@ class Arrivals(object):
             logger.debug(f"Computing arrivals: {i / num_pts * 100:.2f}%")
             line_src_to_btm = Line(self.src_pos, bty_pt)
 
-            for receiver in self.receivers:
+            for j, receiver in enumerate(self.receivers):
                 line_btm_to_receiver = Line(bty_pt, receiver['pos'])
 
                 round_trip_len_meters = (
@@ -83,14 +84,15 @@ class Arrivals(object):
                     self.sound_speed_samples_per_meter)
 
                 receiver['arrival_times'].append(round_trip_time_samples_per_sec)
+        #for receiver in self.receivers:
+        #    receiver['arrival_times'].sort()
         logger.info("Computing arrivals: 100%")
 
     def _compute_receiver_time_series(self):
         logger.info("Generating receiver time series")
         for i, receiver in enumerate(self.receivers):
             logger.debug(f"Generating receiver time series: {i / self.num_receivers * 100:.2f}%")
-            receiver_arrival = receiver['arrival_times']
-            receiver_arrival.sort()
+            receiver_arrival = sorted(receiver['arrival_times'])
             arrival_i = 0
             num_arrivals = len(receiver_arrival)
             active_arrivals = []
@@ -140,13 +142,15 @@ def sum_receiver_timeseries(shifted_timeseries):
     receiver_contribution = [0 for _ in shifted_timeseries]
     x = []
     y = []
-    amplitude = 0
-    for t, amp, i in all_values:
-        current = receiver_contribution[i]
-        amplitude = amplitude + amp - current
-        receiver_contribution[i] = amp
-        x.append(t)
-        y.append(amplitude)
+    current_amplitude = 0
+    for t, amp, j in all_values:
+        current_amplitude = current_amplitude + amp - receiver_contribution[j]
+        receiver_contribution[j] = amp
+        if x and x[-1] == t:
+            y[-1] = current_amplitude
+        else:
+            x.append(t)
+            y.append(current_amplitude)
 
     return {
         'time': np.array(x),

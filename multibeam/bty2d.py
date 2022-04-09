@@ -4,6 +4,8 @@ import math
 import numpy as np
 import matplotlib.pyplot as plt
 
+from line import Line, angle_between2d, intersection2d
+
 import logging
 logging.basicConfig(format="%(name)s - %(levelname)s - %(asctime)s - %(message)s",
                     level=logging.ERROR)
@@ -27,32 +29,73 @@ class Bty2D:
             xs = []
             zs = []
             for i in range(0, n):
-                x, z = fin.readline().split(" ", 2)
+                x, z = fin.readline().split(None, 2)
                 xs.append(float(x))
                 zs.append(float(z))
         logger.debug(f"Parsing '{file_name}' succeeded")
         return Bty2D(interp, xs, zs)
 
     @staticmethod
-    def gen_random(initial_depth=2600, num_pts=100):
-        rand_nums = np.random.default_rng().standard_normal(num_pts) * 5 + 3
+    def gen_random(initial_depth=2600, num_pts=100, point_spacing=1.0, step=5.0, bias=0.5):
+        rand_nums = np.random.default_rng().standard_normal(num_pts) * step
+        do_add = np.random.default_rng().standard_normal(num_pts) > bias
         x = []
         z = []
         depth = initial_depth
         for i in range(num_pts):
             delta = rand_nums[i]
-            tmp = depth + delta
-            depth = tmp if tmp < 3000 else depth - delta
-            x.append(i)
+            depth = depth + delta if do_add[i] else depth - delta
+            x.append(i * point_spacing)
             z.append(depth)
         return Bty2D('L', x, z)
 
     @staticmethod
-    def gen_flat(depth=2000, num_pts=100):
+    def gen_flat(depth=2000, num_pts=100, point_spacing=1.0):
         return Bty2D(
             'L',
-            [i for i in range(num_pts)],
+            [i * point_spacing for i in range(num_pts)],
             [depth for _ in range(num_pts)])
+
+    @staticmethod
+    def gen_sloped(initial_depth=2000, num_pts=100, point_spacing=1.0, increment=10.0):
+        return Bty2D(
+            'L',
+            [i * point_spacing for i in range(num_pts)],
+            [initial_depth + (i * increment) for i in range(num_pts)])
+
+    @staticmethod
+    def for_angles(bty, num_pts=100):
+        x = bty.x
+        z = bty.z
+        center_x = (x[0] + x[-1]) / 2
+        center_surf = (center_x, 0)
+        center_bty = (center_x, x[math.floor(len(x)/2)])
+        center_line = Line(center_surf, center_bty)
+        min_theta = angle_between2d(Line(center_surf, (x[0], z[0])), center_line)
+        max_theta = angle_between2d(Line(center_surf, (x[-1], z[-1])), center_line)
+        bty_lines = []
+        for i in range(0, len(x)-1):
+            bty_lines.append(Line((x[i], z[i]), (x[i+1], z[i+1])))
+        xx = []
+        zz = []
+        for theta in np.linspace(start=min_theta+(math.pi/2), stop=max_theta+(math.pi/2), num=num_pts):
+            ray_pt = (
+                center_x + (3000 * math.cos(theta)),
+                3000 * math.sin(theta)
+            )
+            ray = Line(center_surf, ray_pt)
+            intersection = None
+            for bty_line in bty_lines:
+                intersection = intersection2d(bty_line, ray)
+                if intersection:
+                    break
+            if not intersection:
+                logger.warning(f"unable to compute intersection for ray {ray.src}->{ray.dst}.")
+            else:
+                xx.append(intersection[0])
+                zz.append(intersection[1])
+        xx, zz = list(zip(*sorted(list(zip(xx, zz)))))
+        return Bty2D(bty.interp, xx, zz)
 
     def __init__(self, interp, x, z):
         self.interp = interp
@@ -129,8 +172,16 @@ def main():
 
 
 def main_gen():
-    bty = Bty2D.gen_flat()
-    bty.to_file("bathymetry2d_flat.bty")
+    # bty = Bty2D.for_angles(
+    #     Bty2D.gen_random(initial_depth=1000, num_pts=1000, point_spacing=0.1, bias=0.4, step=2),
+    #     num_pts=500)
+    # bty = Bty2D.gen_random(initial_depth=1500, num_pts=1000, point_spacing=0.1, bias=0.4, step=2)
+    bty = Bty2D.gen_flat(500, 1000, 0.1)
+
+    bty.to_file("bathymetry2d.bty")
+    plt.figure(1)
+    bty.plot_bathy(plt.gca())
+    plt.show()
 
 
 if __name__ == "__main__":
