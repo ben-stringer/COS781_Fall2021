@@ -37,5 +37,5 @@ for i in range(max_i):
 
 # Randomize the records so we can split off training and testing sets
 rand.shuffle(records)
-training_set = records[0:math.floor(num_positions*0.8)]
-testing_set = records[math.ceil(num_positions*0.8):num_positions - 1]
+training_set = records[0:math.ceil(num_positions*0.8)]
+testing_set = records[math.ceil(num_positions*0.8):num_positions]
