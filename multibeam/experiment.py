@@ -102,10 +102,10 @@ def main_view_arrival_times():
 
 
 def main_compute_TOFs():
-    bty = Bty2D.parse('bathymetry2d.bty')
-    xx = bty.x
-    zz = bty.z
-    n = math.floor(len(xx) / 2)
+    # bty = Bty2D.parse('bathymetry2d.bty')
+    # xx = bty.x
+    # zz = bty.z
+    # n = math.floor(len(xx) / 2)
 
     sample_rate_hz = 300_000_000
 
@@ -113,12 +113,12 @@ def main_compute_TOFs():
         len_nadir = Line((50, 0), (50, depth)).length
         len_left = Line((50, 0), (49.9, depth)).length
 
-        time_to_nadir = 2 * len_nadir / 1500 * sample_rate_hz
-        time_to_left = 2 * len_left / 1500 * sample_rate_hz
+        time_to_nadir = 2 * len_nadir / 1500
+        time_to_left = 2 * len_left / 1500
 
         print(f"    {len_nadir} : {time_to_nadir}")
         print(f"    {len_left} : {time_to_left}")
-        print(f"{depth} : {abs(time_to_nadir - time_to_left) > 1}")
+        print(f"{depth} : {abs(time_to_nadir - time_to_left) }")
 
     for i in range(500, 5500, 500):
         do_test(i)
@@ -127,6 +127,6 @@ def main_compute_TOFs():
 
 
 if __name__ == '__main__':
-    main_view_individual_returns()
+    # main_view_individual_returns()
     # main_view_arrival_times()
-    # main_compute_TOFs()
+    main_compute_TOFs()

@@ -7,6 +7,7 @@ import matplotlib.pyplot as plt
 from line import Line, angle_between2d, intersection2d
 
 import logging
+
 logging.basicConfig(format="%(name)s - %(levelname)s - %(asctime)s - %(message)s",
                     level=logging.ERROR)
 logger = logging.getLogger(__name__)
@@ -64,38 +65,47 @@ class Bty2D:
             [initial_depth + (i * increment) for i in range(num_pts)])
 
     @staticmethod
-    def for_angles(bty, num_pts=100):
-        x = bty.x
-        z = bty.z
-        center_x = (x[0] + x[-1]) / 2
-        center_surf = (center_x, 0)
-        center_bty = (center_x, x[math.floor(len(x)/2)])
-        center_line = Line(center_surf, center_bty)
-        min_theta = angle_between2d(Line(center_surf, (x[0], z[0])), center_line)
-        max_theta = angle_between2d(Line(center_surf, (x[-1], z[-1])), center_line)
-        bty_lines = []
-        for i in range(0, len(x)-1):
-            bty_lines.append(Line((x[i], z[i]), (x[i+1], z[i+1])))
+    def for_angles(x, z, src, num_pts=100, interp='L'):
+        bty_lines = [Line((x[i], z[i]), (x[i + 1], z[i + 1]))
+                     for i in range(0, len(x) - 1)]
+
+        def intersect_with_bathy(line):
+            return min(
+                map(lambda pt_i: (Line(src, pt_i).length, pt_i),
+                    filter(lambda pt_i: pt_i is not None,
+                           map(lambda bty_line: intersection2d(line, bty_line),
+                               bty_lines)
+                           )),
+                default=(None, None))[1]
+
+        center = intersect_with_bathy(Line(src, ((x[0] + x[-1]) / 2, 3000)))
+        if not center:
+            raise Exception("Unable to find center bathymetry point")
+        center_x = center[0]
+        center_z = center[1]
+        center_bty = (center_x, center_z)
+        center_line = Line(src, center_bty)
+        min_theta = angle_between2d(Line(src, (x[0], z[0])), center_line)
+        max_theta = angle_between2d(Line(src, (x[-1], z[-1])), center_line)
         xx = []
         zz = []
-        for theta in np.linspace(start=min_theta+(math.pi/2), stop=max_theta+(math.pi/2), num=num_pts):
+        failed = 0
+        for theta in np.linspace(start=min_theta + (math.pi / 2), stop=max_theta + (math.pi / 2), num=num_pts):
             ray_pt = (
                 center_x + (3000 * math.cos(theta)),
                 3000 * math.sin(theta)
             )
-            ray = Line(center_surf, ray_pt)
-            intersection = None
-            for bty_line in bty_lines:
-                intersection = intersection2d(bty_line, ray)
-                if intersection:
-                    break
+            ray = Line(src, ray_pt)
+            intersection = intersect_with_bathy(ray)
             if not intersection:
-                logger.warning(f"unable to compute intersection for ray {ray.src}->{ray.dst}.")
+                logger.warning(f"unable to compute intersection for ray {ray}.")
+                failed += 1
             else:
                 xx.append(intersection[0])
                 zz.append(intersection[1])
         xx, zz = list(zip(*sorted(list(zip(xx, zz)))))
-        return Bty2D(bty.interp, xx, zz)
+        logger.warning(f'{failed} out of {num_pts} failed to intersect.')
+        return Bty2D(interp, xx, zz)
 
     def __init__(self, interp, x, z):
         self.interp = interp
@@ -118,7 +128,7 @@ class Bty2D:
 
     def plot_bathy(self, axes):
         plt.plot(self.x, self.z, '#653700')
-        axes.set_ylim([0, max(self.z)+100])
+        axes.set_ylim([0, max(self.z) + 100])
         axes.invert_yaxis()
 
     def to_file(self, filename):
@@ -176,8 +186,13 @@ def main_gen():
     #     Bty2D.gen_random(initial_depth=1000, num_pts=1000, point_spacing=0.1, bias=0.4, step=2),
     #     num_pts=500)
     # bty = Bty2D.gen_random(initial_depth=1500, num_pts=1000, point_spacing=0.1, bias=0.4, step=2)
-    bty = Bty2D.gen_flat(500, 1000, 0.1)
+    # bty = Bty2D.gen_flat(500, 1000, 0.1)
 
+    bty = Bty2D.for_angles(
+        [0, 20, 30, 40, 100],
+        [1000, 1000, 800, 1000, 1000],
+        (50, 50)
+    )
     bty.to_file("bathymetry2d.bty")
     plt.figure(1)
     bty.plot_bathy(plt.gca())
@@ -186,4 +201,4 @@ def main_gen():
 
 if __name__ == "__main__":
     main_gen()
-    #main()
+    # main()
