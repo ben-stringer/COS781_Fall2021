@@ -3,7 +3,7 @@
 import math
 import matplotlib.pyplot as plt
 import numpy as np
-from line import Line
+from multibeam.line import Line
 
 import logging
 logging.basicConfig(format="%(name)s - %(levelname)s - %(asctime)s - %(message)s",

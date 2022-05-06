@@ -4,7 +4,7 @@ import math
 import numpy as np
 import matplotlib.pyplot as plt
 
-from line import Line, angle_between2d, intersection2d
+from multibeam.line import Line, angle_between2d, intersection2d
 
 import logging
 
@@ -185,14 +185,14 @@ def main_gen():
     # bty = Bty2D.for_angles(
     #     Bty2D.gen_random(initial_depth=1000, num_pts=1000, point_spacing=0.1, bias=0.4, step=2),
     #     num_pts=500)
-    # bty = Bty2D.gen_random(initial_depth=1500, num_pts=1000, point_spacing=0.1, bias=0.4, step=2)
+    bty = Bty2D.gen_random(initial_depth=1500, num_pts=1000, point_spacing=0.1, bias=0.4, step=2)
     # bty = Bty2D.gen_flat(500, 1000, 0.1)
 
-    bty = Bty2D.for_angles(
-        [0, 20, 30, 40, 100],
-        [1000, 1000, 800, 1000, 1000],
-        (50, 50)
-    )
+    # bty = Bty2D.for_angles(
+    #     [0, 20, 30, 40, 100],
+    #     [1000, 1000, 800, 1000, 1000],
+    #     (50, 50)
+    # )
     bty.to_file("bathymetry2d.bty")
     plt.figure(1)
     bty.plot_bathy(plt.gca())
