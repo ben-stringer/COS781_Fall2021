@@ -194,6 +194,7 @@ def plot_view(arr, src, rec_x, rec_z, pred_x, pred_z):
     plot_bty(arr, src, rec_x, rec_z)
     plot_predictions(pred_x, pred_z)
 
+
 def main():
     src, rec_x, rec_z, arr = load_or_generate_arrivals('arrivals_pickle_2d.pkl')
 

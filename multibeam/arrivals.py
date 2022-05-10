@@ -31,8 +31,8 @@ class Arrivals(object):
 
     def __init__(self, bty, src_pos, receiver_positions,
                  sound_speed_meters_per_sec=1500,
-                 ping_duration_sec=0.001,
-                 freq_hz=8_000,
+                 ping_duration_sec=0.01,
+                 freq_hz=1_000,
                  sample_rate_hz=300_000_000):
         self.bathymetry_points = bty
         self.src_pos = src_pos

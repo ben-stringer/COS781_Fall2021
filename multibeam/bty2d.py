@@ -89,6 +89,7 @@ class Bty2D:
         max_theta = angle_between2d(Line(src, (x[-1], z[-1])), center_line)
         xx = []
         zz = []
+
         failed = 0
         for theta in np.linspace(start=min_theta + (math.pi / 2), stop=max_theta + (math.pi / 2), num=num_pts):
             ray_pt = (
