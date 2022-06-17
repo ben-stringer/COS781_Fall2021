@@ -1,4 +1,4 @@
-#!/usr/bin/env python3.9
+#!/usr/bin/env python3
 
 import math
 import numpy as np
@@ -202,4 +202,4 @@ def main_gen():
 
 if __name__ == "__main__":
     main_gen()
-    # main()
+    main()
